@@ -15,7 +15,7 @@ const Cadastro = ({ navigation }) => {
 
   // Axios Cadastro
 const handleClickCadastro = async (values) => {
-  axios.post("http://192.168.100.7:3005/cadastrarUsuario", {
+  axios.post("http://10.0.3.233:3005/cadastrarUsuario", {
     nome: values.nome,
     email: values.email,
     password: values.password,
