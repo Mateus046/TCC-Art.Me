@@ -1,5 +1,11 @@
 import React from 'react';
-import { View, Text, Image, StyleSheet, TouchableOpacity } from 'react-native';
+import {
+    View,
+    Text,
+    Image,
+    StyleSheet,
+    TouchableOpacity
+  } from 'react-native';
 
 const BoasVindas = ({navigation}) => {
     return (
@@ -27,7 +33,7 @@ const StyleBoasVindas = StyleSheet.create({
 // Botão da tela de boas vindas
 fundobotao:{
     backgroundColor: 'white',
-    padding: 12,
+    padding: 9,
     width:'50%',
     height: 50,
     margin:15,
@@ -36,7 +42,7 @@ fundobotao:{
 
   // Texto do botão da tela de boas vindas    
   textobotao:{
-    fontSize: 18,
+    fontSize: 22,
     fontWeight: 'bold',
     textAlign: 'center',
     color: '#F97316'    

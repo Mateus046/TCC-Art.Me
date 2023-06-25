@@ -1,41 +1,84 @@
 import React, { useState, useEffect } from 'react';
 import {
-  StyleSheet, Text, View, TextInput, TouchableOpacity, Image, ScrollView
-} from 'react-native';
+  StyleSheet,
+  Text,
+  View,
+  TextInput,
+  TouchableOpacity,
+  Image,
+  } from 'react-native';
+  
 import { Formik } from 'formik';
 import * as yup from "yup";
 import axios from "axios";
+import configuration from '../../configuration.json';
+
 
 //importando modulo AsyncStorage para salvar dados do login
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const Login = ({ navigation }) => {
 
+
+// --------------------------- Rota do axios que tráz o email e senha do artista --------------------------------
+
+  // const handleClickLogin = async (values) => {
+  //   axios.get(`${configuration.url}/listarUsuarioEMAIL/${values.email}/${values.password}`, {
+  //     email: values.email,
+  //     password: values.password,
+  //   })
+
+  //     .then(function (response) {
+
+  //       console.log("Dados da tela de Login: " + JSON.stringify(response.data))
+  //       setDados(response.data)
+  //       // console.log("Teste de Dados: " + JSON.stringify(dados))
+
+        
+  //       //armazenando dados do usuario em cache 
+  //        AsyncStorage.setItem('usuarioData', JSON.stringify(response.data.data))
+
+  //       if (response == 201) {
+  //       } else if (response == 404) {
+  //         console.log("algo errado")
+  //       }
+  //     })
+  //     .catch((error) => {
+  //       console.log(error);
+  //     })
+  // }
+
   const handleClickLogin = async (values) => {
-    axios.get(`http://10.0.3.233:3005/listarUsuarioEMAIL/${values.email}/${values.password}`, {
-      email: values.email,
-      password: values.password,
-    })
+    axios
+      .get(`${configuration.url}/listarUsuarioEMAIL/${values.email}/${values.password}`, {
+        email: values.email,
+        password: values.password,
+      })
 
       .then(function (response) {
-        console.log(response.data)
-        setDados(response.data.data)
-        //armazenando dados do usuario em cache 
-        //  AsyncStorage.setItem('usuarioData', JSON.stringify(response.data.data))
 
-        if (response == 201) {
-        } else if (response == 404) {
-          console.log("algo errado")
+        console.log("Dados da tela de Login: " + JSON.stringify(response.data));
+        const responseData = response.data;
+
+        if (responseData && responseData.data) {
+          setDados(responseData.data);
+
+          AsyncStorage.setItem('usuarioData', JSON.stringify(responseData.data));
+          navigation.navigate("Menu");
+          
+        } else {
+          alert("Email ou senha incorretos!");
         }
       })
       .catch((error) => {
         console.log(error);
-      })
-  }
+        alert("Ocorreu um erro ao realizar o login. Por favor, tente novamente mais tarde.");
+      });
+  };
+  
+// -----------------------------------------------------------------------------------------------------------
 
   const [dados, setDados] = useState(null);
-  // const [email, setEmail] = useState(null);
-  // const [password, setPassword] = useState(null);
 
   useEffect(() => {
     dados != null
@@ -60,14 +103,10 @@ const Login = ({ navigation }) => {
   })
 
   function ValidationDados(dados) {
-    // let dados = {
-    //   email: email,
-    //   password: password,
-    // }
     if (dados != null) {
       navigation.navigate("Menu")
     } else {
-      alert("Login inválido!")
+      // alert("Login inválido!")
     }
   }
 

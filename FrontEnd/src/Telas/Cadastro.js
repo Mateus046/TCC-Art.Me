@@ -1,51 +1,71 @@
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, 
-         Text,
-         View,
-         TextInput,
-         TouchableOpacity,
-         Image,
-         ScrollView
-        } from 'react-native';
+import { 
+    StyleSheet, 
+    Text,
+    View,
+    TextInput,
+    TouchableOpacity,
+    Image,
+    ScrollView,
+    Modal
+  } from 'react-native';
+  
 import { Formik } from 'formik';
 import * as yup from "yup";
 import axios from "axios";
+import configuration from '../../configuration.json';
+import BotaoCategoriaModal from '../components/BotaoCategoriaModal';
+import { TextInputMask } from 'react-native-masked-text';
+
 
 const Cadastro = ({ navigation }) => {
 
-  // Axios Cadastro
+  
+const [modalVisible, setModalVisible] = useState(false);
+
+  // ------------------------------------ Rota de cadastrar artísta do Axios ----------------------------------
 const handleClickCadastro = async (values) => {
-  axios.post("http://10.0.3.233:3005/cadastrarUsuario", {
+  axios.post(`${configuration.url}/cadastrarUsuario`, {
     nome: values.nome,
+    sobrenome: values.sobrenome,
     email: values.email,
     password: values.password,
     telefone: values.telefone,
-    uf: values.uf
+    uf: values.uf,
+    catServicoNomeCategoria: catServicoNomeCategoria
   })
-
   .then((response) => {
-    if(response == 201){
-      navigation.navigate('Menu')
-    } else if(response == 400){
-      alert.alert("algo errado")
-    }
+
+    alert("Cadastro completado com Sucesso!")
+
+    console.log(response.data)
+    setCatServicoNomeCategoria(null)
     
   })
   .catch((error) => {
+
+    alert("Erro!")
     console.log(error);
   })  
 }
+// --------------------------------------------------------------------------------------------------------------
 
 // Validação dos dados
 const validationCadastro = yup.object().shape({
   
   nome: yup
   .string()
-  .required("Este campo é obrigatório"),
+  .required("Este campo é obrigatório")
+  .matches(/^[A-z]+$/ , 'Nome inválido'),
+
+  sobrenome: yup
+  .string()
+  .required("Este campo é obrigatório")  
+  .matches(/^[A-z]+$/ , 'Sobrenome inválido'),
     
   email: yup
   .string()
-  .email('Não é um Email')
+  .email('Email inválido')
   .required("Este campo é obrigatório"),
 
   password: yup
@@ -64,6 +84,47 @@ const validationCadastro = yup.object().shape({
 })
 
 
+// -------------------------------- Definindo a categoria do artísta -----------------------------------------
+const [catServicoNomeCategoria, setCatServicoNomeCategoria] =  useState(null)
+
+const [catPintor, setcatPintor] =  useState(false)
+const [catFotografo, setcatFotografo] =  useState(false)
+const [catMusico, setcatMusico] =  useState(false)
+
+useEffect (() => {
+  if (catPintor == true) {
+  setCatServicoNomeCategoria('Pintor'),
+  console.log(catServicoNomeCategoria)
+  setModalVisible(!modalVisible)
+  }
+  return () => {
+    setcatPintor(false)
+  }
+})
+
+useEffect (() => {
+  if (catFotografo == true) {
+  setCatServicoNomeCategoria('Fotografo'),
+  console.log(catServicoNomeCategoria)
+  setModalVisible(!modalVisible)
+  }
+  return () => {
+    setcatFotografo(false)
+  }
+})
+
+useEffect (() => {
+  if (catMusico == true) {
+  setCatServicoNomeCategoria('Musico'),
+  console.log(catServicoNomeCategoria)
+  setModalVisible(!modalVisible)
+  }
+  return () => {
+    setcatMusico(false)
+  }
+})
+// -------------------------------------------------------------------------------------------------------
+
   return (
     <ScrollView>
     <Formik
@@ -71,10 +132,11 @@ const validationCadastro = yup.object().shape({
     validationSchema={validationCadastro}
     initialValues={{
         nome: '',
+        sobrenome: '',
         email: '',
         password: '',
         telefone: '',
-        uf: '',
+        uf: ''
       }}
 
     onSubmit={values=>{handleClickCadastro(values)}}
@@ -112,6 +174,7 @@ const validationCadastro = yup.object().shape({
               
               <TextInput
                 style={StyleCadastro.inputText}
+                autoCapitalize="words"
                 placeholder="Nome"
                 placeholderTextColor="#F97316"
                 value={values.nome}
@@ -119,6 +182,22 @@ const validationCadastro = yup.object().shape({
                 onBlur={() => setFieldTouched('nome')}                
               />   
                {touched.nome && <Text style={StyleCadastro.msgErro}>{errors.nome}</Text>}    
+
+            </View>
+
+            {/* input sobrenome */}
+            < View style={StyleCadastro.inputView}>
+              
+              <TextInput
+                style={StyleCadastro.inputText}
+                autoCapitalize="words"
+                placeholder="Sobrenome"
+                placeholderTextColor="#F97316"
+                value={values.sobrenome}
+                onChangeText={handleChange('sobrenome')}
+                onBlur={() => setFieldTouched('sobrenome')}                
+              />   
+               {touched.sobrenome && <Text style={StyleCadastro.msgErro}>{errors.sobrenome}</Text>}    
 
             </View>
 
@@ -149,7 +228,7 @@ const validationCadastro = yup.object().shape({
                 onChangeText={handleChange('password')}
                 onBlur={handleBlur('password')}
               />
-              {errors.password && <Text style={StyleCadastro.msgErro}>{errors.password}</Text>}
+              {touched.password && <Text style={StyleCadastro.msgErro}>{errors.password}</Text>}
 
             </View>
 
@@ -159,16 +238,24 @@ const validationCadastro = yup.object().shape({
               {/* input telefone */}
               <View style={StyleCadastro.inputViewCurto}>
 
-                <TextInput
+              <TextInputMask
+                  type={'cel-phone'}
+                    options={{
+                      maskType: 'BRL',
+                      withDDD: true,
+                      dddMask: '(99) ',
+                    }}
                   style={StyleCadastro.inputTextCurto}
                   placeholder="Telefone"
                   placeholderTextColor="#F97316"
                   value={values.telefone}
                   onChangeText={handleChange('telefone')}
                   onBlur={handleBlur('telefone')}
+                  keyboardType='numeric'
+                  maxLength={15}
                 />
-                {errors.telefone && <Text style={StyleCadastro.msgErroCurta}>{errors.telefone}</Text>}
-
+                {touched.telefone && <Text style={StyleCadastro.msgErroCurta}>{errors.telefone}</Text>}
+                {/* <MascaraTelefone /> */}
               </View>
 
               {/* input estado */}
@@ -176,17 +263,76 @@ const validationCadastro = yup.object().shape({
                 
                 <TextInput
                   style={StyleCadastro.inputTextCurto}
+                  autoCapitalize="characters"
                   placeholder="UF"
                   placeholderTextColor="#F97316"
                   value={values.uf}
                   onChangeText={handleChange('uf')}
                   onBlur={handleBlur('uf')}
+                  maxLength={2}
                 />
-                {errors.uf && <Text style={StyleCadastro.msgErroCurta}>{errors.uf}</Text>}
+                {touched.uf && <Text style={StyleCadastro.msgErroCurta}>{errors.uf}</Text>}
 
+              </View>             
+
+            </View>     
+
+
+            {/* Input selecionar Categoria */}
+            <View>
+
+              <TouchableOpacity style={StyleCadastro.categoriaButton} onPress={() => setModalVisible(true)}>
+                <Text style={StyleCadastro.categoriaText}>Selecione uma categoria</Text>
+              </TouchableOpacity>
+
+              <Modal
+              animationType="slide"
+              transparent={true}
+              visible={modalVisible}
+              onRequestClose={() => {
+              Alert.alert('Modal has been closed.');
+              setModalVisible(!modalVisible);
+              }}
+            >
+              <View style={StyleCadastro.centeredView}>
+                <View style={StyleCadastro.modalView}>
+
+                  <Text style={StyleCadastro.modalText}>Selecione uma categoria...</Text>
+
+                    <View style={StyleCadastro.modalCategorias}>
+
+                      <TouchableOpacity onPress={() => setcatPintor(true)}>
+                        <BotaoCategoriaModal texto={'Pintor'} imagem={require('../../assets/Imagens/Pintores.png')} />
+                      </TouchableOpacity>
+
+                      <TouchableOpacity onPress={() => setcatFotografo(true)}>
+                        <BotaoCategoriaModal texto={'Fotógrafo'} imagem={require('../../assets/Imagens/Fotografos.png')} />
+                      </TouchableOpacity>
+
+                      <TouchableOpacity onPress={() => setcatMusico(true)}>
+                        <BotaoCategoriaModal texto={'Músico'} imagem={require('../../assets/Imagens/Musicos.png')} />
+                      </TouchableOpacity>                      
+
+                    </View>
+
+                    <TouchableOpacity onPress={() => setModalVisible(!modalVisible)}>
+                      <Text style={StyleCadastro.btnNaoSouArtista}>Sou usuário</Text>  
+                     </TouchableOpacity>
+
+                     <TouchableOpacity onPress={() => setModalVisible(!modalVisible)}>
+                      <Text style={StyleCadastro.voltar}>Voltar</Text>  
+                     </TouchableOpacity>
+
+                    {/* <Pressable
+                    onPress={() => setModalVisible(!modalVisible)}>
+                    <Text style={StyleCadastro.voltar}>Voltar</Text>              
+                    </Pressable> */}
+
+                </View>
               </View>
+            </Modal>
 
-            </View>      
+            </View>            
 
             <TouchableOpacity style={StyleCadastro.loginButton} onPress={handleSubmit} disabled={!isValid}>
               <Text style={StyleCadastro.loginText}>Cadastrar</Text>
@@ -211,6 +357,7 @@ const StyleCadastro = StyleSheet.create({
     backgroundColor: 'white',
     alignItems: 'center',
     justifyContent: 'center',
+    height: 800
   },
 
   //imagem
@@ -231,7 +378,7 @@ const StyleCadastro = StyleSheet.create({
   borderRadius: 30,
   paddingVertical: 20,
   width: 310,
-  height: 460,
+  height: 570,
   backgroundColor: '#FFC700',
   alignItems: 'center',
   justifyContent: 'center',
@@ -345,7 +492,7 @@ modalContainer: {
 
 modalText: {
 fontSize: 19,
-color: 'white',
+color: 'black',
 fontWeight: 'bold',
 textAlign:'center',
 },
@@ -389,19 +536,20 @@ msgErroCurta: {
   // paddingLeft: 35
 },
 
-//Botão de Entrar
+//Botão de Cadastrar
 loginButton: {
   textAlign: 'center',
   width: 130,
   height: 40,
   borderRadius: 40,
-  alignContent: 'center',
+  // alignContent: 'center',
   justifyContent: 'center',
-  paddingHorizontal: 20,
+  // paddingHorizontal: 20,
   backgroundColor: '#F97316',
   padding: 5,
   fontSize: 10,
-  margin: 30,
+  // margin: 20,
+  marginTop: 35
 },
 
 // Fonte do Botão Entrar
@@ -411,6 +559,88 @@ loginText: {
   fontWeight: 'bold',
   textAlign:'center',
 },
+
+//Botão de selecionar a categoria do artista
+categoriaButton: {
+  textAlign: 'center',
+  width: 270,
+  height: 43,
+  borderRadius: 40,
+  // alignContent: 'center',
+  justifyContent: 'center',
+  // paddingHorizontal: 20,
+  backgroundColor: '#fff',
+  // margin: 20,
+  marginTop: 40
+},
+
+// Fonte do Botão Entrar
+categoriaText: {
+  fontSize: 19,
+  color: '#F97316',
+  textAlign:'center',
+},
+
+centeredView: {
+  flex: 1,
+  justifyContent: "center",
+  alignItems: "center",
+  marginTop: 22
+},
+
+modalView: {
+  margin: 20,
+  backgroundColor: "white",
+  borderRadius: 20,
+  padding: 35,
+  alignItems: "center",
+  shadowColor: "#000",
+  width: 350,
+  height: 530,
+  shadowOffset: {
+    width: 0,
+    height: 2
+  },
+  shadowOpacity: 0.25,
+  shadowRadius: 4,
+  elevation: 5
+},
+
+modalCategorias: {
+  margin: 20
+},
+
+voltar: {
+  textAlign: 'center',
+  margin: 25,
+  borderRadius: 30,
+  paddingHorizontal: 10,
+  backgroundColor: '#F97316',      
+  fontWeight: 'bold',
+  fontSize: 18,
+  color: 'white',
+  marginBottom: 10,
+  width: 80,
+  height: 30,
+  padding: 2
+},
+
+btnNaoSouArtista: {
+  textAlign: 'center',
+  margin: -7,
+  borderRadius: 30,
+  // paddingHorizontal: 10,
+  backgroundColor: '#fff',      
+  fontWeight: 'bold',
+  fontSize: 18,
+  color: '#F97316',
+  marginBottom: 10,
+  width: 170,
+  height: 35,
+  padding: 4,
+  borderWidth: 3,
+  borderColor: '#F97316',
+}
 
 })
 
